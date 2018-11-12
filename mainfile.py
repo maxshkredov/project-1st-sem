@@ -2,7 +2,7 @@ import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDesktopWidget, \
      QMessageBox, QPushButton, QAction, QFileDialog, QLabel, QMenu, \
      QGraphicsView, QVBoxLayout, QWidget, QGraphicsScene
-from PyQt5.QtGui import QPixmap, QColor, QPen
+from PyQt5.QtGui import QPixmap, QColor, QPen, QPainter
 
 
 class Canvas(QGraphicsView):
@@ -14,34 +14,30 @@ class Canvas(QGraphicsView):
         pass
 
 
-class Pen(Canvas):
+class Instrument(QPainter):
     def __init__(self):
-        super().__init__()
+        super(Canvas, self).__init__()
         
-    def draw(self, event):
+    def mousePressEvent(self, event):
         self.start = self.mapToScene(event.pos())
         self.path.moveTo(self.start)
+
+    def mouseMoveEvent(self, event):
         self.end = self.mapToScene(event.pos())
         self.path.lineTo(self.end)
         self.start = self.end
         self.item.setPath(self.path)
 
-    def colour(self, cl):
+    def colour(self):
         pass
 
-    def size(self, size):
+    def size(self):
         pass
 
-class Eraser(Pen):
+
+class Window(QMainWindow):
     def __init__(self):
         super().__init__()
-
-    def erase(self):
-        pass
-
-class Window(QMainWindow, Pen):
-    def __init__(self):
-        super(Pen, self).__init__()
         
         self.central_widget = QWidget()
         self.layout_container = QVBoxLayout()
@@ -53,18 +49,18 @@ class Window(QMainWindow, Pen):
 
     def initUI(self):
         extractAction1 = QAction('draw', self)
-        extractAction1.triggered.connect(Pen.draw)
+        extractAction1.triggered.connect(Instrument.__init__)
 
         extractAction2 = QAction('setColour', self)
-        extractAction2.triggered.connect(Pen.colour)
+        extractAction2.triggered.connect(Instrument.colour)
         
         impMenu3 = QMenu('size', self)
         extractAction3 = QAction('setSize', self)
-        extractAction3.triggered.connect(Pen.size)
+        extractAction3.triggered.connect(Instrument.size)
         impMenu3.addAction(extractAction3)
 
         extractAction4 = QAction('erase', self)
-        extractAction4.triggered.connect(Eraser.draw)
+        extractAction4.triggered.connect(Instrument.__init__)
 
         extractAction5 = QAction('save', self)
         extractAction5.setShortcut('Ctrl+S')
