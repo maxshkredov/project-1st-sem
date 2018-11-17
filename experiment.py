@@ -15,11 +15,8 @@ class Canvas(QGraphicsView):
         
         self.setScene(QGraphicsScene())
         self.path = QPainterPath()
-        self.item = GraphicsPathItem()
+        self.item = Instrument()
         self.scene().addItem(self.item)
-
-    def clear(self):
-        pass
 
     def mousePressEvent(self, event):
         self.start = self.mapToScene(event.pos())
@@ -30,26 +27,29 @@ class Canvas(QGraphicsView):
         self.path.lineTo(self.end)
         self.start = self.end
         self.item.setPath(self.path)
+        
+    @classmethod
+    def set_colour(self):
+        self.item.itemChange(Instrument, Instrument.colour)
 
-    """@classmethod
-    def create(cls):
-        return Instrument()"""
-
-    def colour(self):
+    def clear(self):
         pass
+
+
+class Instrument(QGraphicsPathItem):
+    def __init__(self):
+        super(Instrument, self).__init__()
+        
+        pen = QPen(Qt.black, 10)
+        self.setPen(pen)
+
+    @classmethod  
+    def colour(self):
+        pen.color = Qt.red
 
     def size(self):
         pass
 
-class GraphicsPathItem(QGraphicsPathItem):
-    def __init__(self):
-        super(GraphicsPathItem, self).__init__()
-        
-        pen = QPen()
-        pen.setColor(Qt.black)
-        pen.setWidth(10)
-        self.setPen(pen)
-        
 
 class Window(QMainWindow):
     def __init__(self):
@@ -64,20 +64,17 @@ class Window(QMainWindow):
         self.initUI()
 
     def initUI(self):
-        """extractAction1 = QAction('draw', self)
-        extractAction1.triggered.connect(Instrument.create)
-
         impMenu2 = QMenu('colour', self)
         extractAction2 = QAction('Black', self)
-        extractAction2.triggered.connect(Instrument.colour)
+        extractAction2.triggered.connect(Canvas.set_colour)
         extractAction10 = QAction('White', self)
-        extractAction10.triggered.connect(Instrument.colour)
+        extractAction10.triggered.connect(Canvas.set_colour)
         extractAction11 = QAction('Red', self)
-        extractAction11.triggered.connect(GraphicsPathItem().colour)
+        extractAction11.triggered.connect(Canvas.set_colour)
         extractAction12 = QAction('Yellow', self)
-        extractAction12.triggered.connect(Instrument.colour)
+        extractAction12.triggered.connect(Canvas.set_colour)
         extractAction13 = QAction('Green', self)
-        extractAction13.triggered.connect(Instrument.colour)
+        extractAction13.triggered.connect(Canvas.set_colour)
         impMenu2.addAction(extractAction2)
         impMenu2.addAction(extractAction10)
         impMenu2.addAction(extractAction11)
@@ -85,7 +82,7 @@ class Window(QMainWindow):
         impMenu2.addAction(extractAction13)
         
         impMenu3 = QMenu('size', self)
-        extractAction3 = QAction('setSize', self)
+        extractAction3 = QAction('Big', self)
         extractAction3.triggered.connect(Instrument.size)
         extractAction8 = QAction('Medium', self)
         extractAction8.triggered.connect(Instrument.size)
@@ -116,15 +113,14 @@ class Window(QMainWindow):
         fileMenu1.addAction(extractAction6)
         
         fileMenu2 = mainMenu.addMenu('&Pen')
-        #fileMenu2.addAction(extractAction1)
+        fileMenu2.addMenu(impMenu3)
         fileMenu2.addMenu(impMenu2)
-        #fileMenu2.addMenu(impMenu3)
         
         fileMenu3 = mainMenu.addMenu('&Eraser')
         fileMenu3.addAction(extractAction4)
 
         fileMenu4 = mainMenu.addMenu('&Canvas')
-        fileMenu4.addAction(extractAction7)"""
+        fileMenu4.addAction(extractAction7)
         
         self.setGeometry(300, 300, 600, 600)
         self.center()
