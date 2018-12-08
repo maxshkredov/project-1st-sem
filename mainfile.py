@@ -1,12 +1,11 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDesktopWidget, \
-     QMessageBox, QPushButton, QAction, QFileDialog, QLabel, QMenu, \
-     QGraphicsView, QVBoxLayout, QWidget, QGraphicsScene, QGraphicsPathItem \
-     
-from PyQt5.QtGui import QPixmap, QColor, QPen, QPainter, QPainterPath, \
-     QMouseEvent
+     QMessageBox, QAction, QFileDialog, QLabel, QMenu, \
+     QGraphicsView, QVBoxLayout, QWidget, QGraphicsScene, QGraphicsPathItem, \
+     QColorDialog     
+from PyQt5.QtGui import QPixmap, QColor, QPen, QPainterPath, \
+     QMouseEvent, QIcon
 from PyQt5.QtCore import Qt
-import pdb
 
 
 class Canvas(QGraphicsView):
@@ -15,11 +14,8 @@ class Canvas(QGraphicsView):
         
         self.setScene(QGraphicsScene())
         self.path = QPainterPath()
-        self.item = GraphicsPathItem()
+        self.item = Instrument()
         self.scene().addItem(self.item)
-
-    def clear(self):
-        pass
 
     def mousePressEvent(self, event):
         self.start = self.mapToScene(event.pos())
@@ -30,26 +26,27 @@ class Canvas(QGraphicsView):
         self.path.lineTo(self.end)
         self.start = self.end
         self.item.setPath(self.path)
-
-    """@classmethod
-    def create(cls):
-        return Instrument()"""
-
-    def colour(self):
+        
+    def clear(self):
         pass
 
-    def size(self):
-        pass
 
-class GraphicsPathItem(QGraphicsPathItem):
+class Instrument(QGraphicsPathItem):
     def __init__(self):
-        super(GraphicsPathItem, self).__init__()
-        
-        pen = QPen()
-        pen.setColor(Qt.black)
-        pen.setWidth(10)
+        super(Instrument, self).__init__()
+
+        global pen
+        pen = QPen(Qt.black, 10)
         self.setPen(pen)
-        
+
+    @classmethod
+    def colour(self):
+        pen.setColor(QColorDialog.getColor())
+
+    @classmethod
+    def size(self):
+        pen.setWidth(15)
+
 
 class Window(QMainWindow):
     def __init__(self):
@@ -64,39 +61,25 @@ class Window(QMainWindow):
         self.initUI()
 
     def initUI(self):
-        """extractAction1 = QAction('draw', self)
-        extractAction1.triggered.connect(Instrument.create)
-
-        impMenu2 = QMenu('colour', self)
-        extractAction2 = QAction('Black', self)
-        extractAction2.triggered.connect(Instrument.colour)
-        extractAction10 = QAction('White', self)
-        extractAction10.triggered.connect(Instrument.colour)
-        extractAction11 = QAction('Red', self)
-        extractAction11.triggered.connect(GraphicsPathItem().colour)
-        extractAction12 = QAction('Yellow', self)
-        extractAction12.triggered.connect(Instrument.colour)
-        extractAction13 = QAction('Green', self)
-        extractAction13.triggered.connect(Instrument.colour)
-        impMenu2.addAction(extractAction2)
-        impMenu2.addAction(extractAction10)
-        impMenu2.addAction(extractAction11)
-        impMenu2.addAction(extractAction12)
-        impMenu2.addAction(extractAction13)
-        
-        impMenu3 = QMenu('size', self)
-        extractAction3 = QAction('setSize', self)
+        impMenu1 = QMenu('size', self)
+        extractAction3 = QAction('Big', self)
         extractAction3.triggered.connect(Instrument.size)
         extractAction8 = QAction('Medium', self)
         extractAction8.triggered.connect(Instrument.size)
         extractAction9 = QAction('Small', self)
         extractAction9.triggered.connect(Instrument.size)
-        impMenu3.addAction(extractAction3)
-        impMenu3.addAction(extractAction8)
-        impMenu3.addAction(extractAction9)
+        impMenu1.addAction(extractAction3)
+        impMenu1.addAction(extractAction8)
+        impMenu1.addAction(extractAction9)
+
+        extractAction1 = QAction('draw', self)
+        extractAction1.triggered.connect(Instrument.colour)
+
+        extractAction2 = QAction('colour', self)
+        extractAction2.triggered.connect(Instrument.colour)
 
         extractAction4 = QAction('erase', self)
-        extractAction4.triggered.connect(Instrument.size)
+        extractAction4.triggered.connect(Instrument.colour)
 
         extractAction5 = QAction('save', self)
         extractAction5.setShortcut('Ctrl+S')
@@ -107,7 +90,7 @@ class Window(QMainWindow):
         extractAction6.triggered.connect(self.loadfrom)
 
         extractAction7 = QAction('clear', self)
-        extractAction7.triggered.connect(Canvas().clear)
+        extractAction7.triggered.connect(Canvas.clear)
 
         mainMenu = self.menuBar()
 
@@ -116,19 +99,20 @@ class Window(QMainWindow):
         fileMenu1.addAction(extractAction6)
         
         fileMenu2 = mainMenu.addMenu('&Pen')
-        #fileMenu2.addAction(extractAction1)
-        fileMenu2.addMenu(impMenu2)
-        #fileMenu2.addMenu(impMenu3)
+        fileMenu2.addAction(extractAction1)
+        fileMenu2.addAction(extractAction2)
+        fileMenu2.addMenu(impMenu1)
         
         fileMenu3 = mainMenu.addMenu('&Eraser')
         fileMenu3.addAction(extractAction4)
 
         fileMenu4 = mainMenu.addMenu('&Canvas')
-        fileMenu4.addAction(extractAction7)"""
+        fileMenu4.addAction(extractAction7)
         
         self.setGeometry(300, 300, 600, 600)
         self.center()
         self.setWindowTitle('MyPaint')
+        self.setWindowIcon(QIcon('Microsoft-Paint-icon.png'))
 
     def closeEvent(self, event):
         reply = QMessageBox.question(self, 'Потверждение', 'You sure, nibba?', \
@@ -147,15 +131,17 @@ class Window(QMainWindow):
         self.move(qr.topLeft())
 
     def saveto(self):
-        pass
+        name = QFileDialog.getSaveFileName(self, 'Choose file')[0]
 
     def loadfrom(self):
         name = QFileDialog.getOpenFileName(self, 'Choose file')[0]
         pixmap = QPixmap(name)
         self.label = QLabel(self)
+        self.label.show()
         self.label.setPixmap(pixmap)
         self.label.resize(pixmap.width(), pixmap.height())
         self.resize(pixmap.width(), pixmap.height())
+
 
 
 if __name__ == '__main__':
