@@ -26,9 +26,6 @@ class Canvas(QGraphicsView):
         self.path.lineTo(self.end)
         self.start = self.end
         self.item.setPath(self.path)
-        
-    def clear(self):
-        pass
 
 
 class Instrument(QGraphicsPathItem):
@@ -61,42 +58,40 @@ class Window(QMainWindow):
         self.initUI()
 
     def initUI(self):
-        impMenu1 = QMenu('size', self)
-        extractAction3 = QAction('Big', self)
-        extractAction3.triggered.connect(Instrument.size)
-        extractAction8 = QAction('Medium', self)
-        extractAction8.triggered.connect(Instrument.size)
-        extractAction9 = QAction('Small', self)
-        extractAction9.triggered.connect(Instrument.size)
-        impMenu1.addAction(extractAction3)
-        impMenu1.addAction(extractAction8)
-        impMenu1.addAction(extractAction9)
-
-        extractAction1 = QAction('draw', self)
+        extractAction1 = QAction('Draw', self)
         extractAction1.triggered.connect(Instrument.colour)
 
-        extractAction2 = QAction('colour', self)
+        extractAction2 = QAction('Colour', self)
         extractAction2.triggered.connect(Instrument.colour)
 
-        extractAction4 = QAction('erase', self)
-        extractAction4.triggered.connect(Instrument.colour)
+        impMenu1 = QMenu('Size', self)
+        extractAction3 = QAction('Big', self)
+        extractAction3.triggered.connect(Instrument.size)
+        extractAction4 = QAction('Medium', self)
+        extractAction4.triggered.connect(Instrument.size)
+        extractAction5 = QAction('Small', self)
+        extractAction5.triggered.connect(Instrument.size)
+        impMenu1.addAction(extractAction3)
+        impMenu1.addAction(extractAction4)
+        impMenu1.addAction(extractAction5)
 
-        extractAction5 = QAction('save', self)
-        extractAction5.setShortcut('Ctrl+S')
-        extractAction5.triggered.connect(self.saveto)
+        extractAction6 = QAction('Erase', self)
+        extractAction6.triggered.connect(Instrument.colour)
 
-        extractAction6 = QAction('load', self)
-        extractAction6.setShortcut('Ctrl+L')
-        extractAction6.triggered.connect(self.loadfrom)
+        extractAction7 = QAction('Save', self)
+        extractAction7.setShortcut('Ctrl+S')
+        extractAction7.triggered.connect(self.saveto)
 
-        extractAction7 = QAction('clear', self)
-        extractAction7.triggered.connect(Canvas.clear)
+        extractAction8 = QAction('Open', self)
+        extractAction8.setShortcut('Ctrl+O')
+        extractAction8.triggered.connect(self.loadfrom)
+
 
         mainMenu = self.menuBar()
 
         fileMenu1 = mainMenu.addMenu('&File')
-        fileMenu1.addAction(extractAction5)
-        fileMenu1.addAction(extractAction6)
+        fileMenu1.addAction(extractAction7)
+        fileMenu1.addAction(extractAction8)
         
         fileMenu2 = mainMenu.addMenu('&Pen')
         fileMenu2.addAction(extractAction1)
@@ -104,35 +99,20 @@ class Window(QMainWindow):
         fileMenu2.addMenu(impMenu1)
         
         fileMenu3 = mainMenu.addMenu('&Eraser')
-        fileMenu3.addAction(extractAction4)
-
-        fileMenu4 = mainMenu.addMenu('&Canvas')
-        fileMenu4.addAction(extractAction7)
+        fileMenu3.addAction(extractAction6)
         
         self.setGeometry(300, 300, 600, 600)
         self.center()
         self.setWindowTitle('MyPaint')
         self.setWindowIcon(QIcon('Microsoft-Paint-icon.png'))
 
-    def closeEvent(self, event):
-        reply = QMessageBox.question(self, 'Потверждение', 'You sure, nibba?', \
-                                     QMessageBox.Yes | QMessageBox.No, \
-                                     QMessageBox.Yes)
-        if reply == QMessageBox.Yes:
-            event.accept()
-        else:
-            event.ignore()
-
-
-    def center(self):
-        qr = self.frameGeometry()
-        cp = QDesktopWidget().availableGeometry().center()
-        qr.moveCenter(cp)
-        self.move(qr.topLeft())
-
+    @classmethod
     def saveto(self):
         name = QFileDialog.getSaveFileName(self, 'Choose file')[0]
+        desktop = QImage(QDesktopWidget())
+        desktop.save(self,format='jpeg')
 
+    @classmethod
     def loadfrom(self):
         name = QFileDialog.getOpenFileName(self, 'Choose file')[0]
         pixmap = QPixmap(name)
@@ -142,6 +122,22 @@ class Window(QMainWindow):
         self.label.resize(pixmap.width(), pixmap.height())
         self.resize(pixmap.width(), pixmap.height())
 
+    def closeEvent(self, event):
+        reply = QMessageBox.question(self, 'Потверждение', 'Сохранить файл?', \
+                                     QMessageBox.Yes | QMessageBox.No, \
+                                     QMessageBox.Yes)
+        if reply == QMessageBox.Yes:
+            self.saveto()
+            event.accept()
+        else:
+            event.accept()
+
+
+    def center(self):
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
 
 
 if __name__ == '__main__':
