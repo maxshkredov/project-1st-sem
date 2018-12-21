@@ -28,28 +28,30 @@ class Canvas(QGraphicsView):
         self.path1 = QPainterPath()
         self.path2 = QPainterPath()
 
+        global viewport
+        viewport = self.viewport()
+
         global new_path
         new_path = Path()
 
-        global new_pathitem, pathitem1, pathitem
+        global new_pathitem, pathitem1, pathitem2
         pathitem1 = QGraphicsPathItem()
-        pathitem = Pathitem()
+        pathitem2 = QGraphicsPathItem()
         new_pathitem = Pathitem()
         
         global pen
         pen = QPen(Qt.black, 10)
-        pathitem.setPen(pen)
+        pathitem1.setPen(pen)
         
         eraser = QPen(Qt.white, 10)
-        pathitem1.setPen(eraser)
+        pathitem2.setPen(eraser)
 
         global item
-        item = pathitem
+        item = pathitem1
         scene.addItem(item)
 
     def mousePressEvent(self, event):
         self.start = self.mapToScene(event.pos())
-        global item, new_pathitem, new_path, pen
         if item == pathitem1:
             self.path1.moveTo(self.start)
         elif item == new_pathitem:
@@ -59,27 +61,26 @@ class Canvas(QGraphicsView):
 
     def mouseMoveEvent(self, event):
         self.end = self.mapToScene(event.pos())
-        global item, new_pathitem, new_path
-        if item == pathitem:
+        if item == pathitem1:
             self.path1.lineTo(self.end)
-            item.setPath(self.path1)
+            pathitem1.setPath(self.path1)
         elif item == new_pathitem:
             new_path.lineTo(self.end)
             new_pathitem.setPath(new_path)
         else:
             self.path2.lineTo(self.end)
-            pathitem1.setPath(self.path2)
+            pathitem2.setPath(self.path2)
 
     @classmethod   
     def erase(self):
         global item
-        item = pathitem1
+        item = pathitem2
         scene.addItem(item)
 
     @classmethod  
     def draw(self):
         global item
-        item = pathitem
+        item = pathitem1
         scene.addItem(item)
     
     @classmethod
@@ -122,6 +123,25 @@ class Canvas(QGraphicsView):
         item = new_pathitem
         scene.addItem(item)
 
+    @classmethod
+    def loadfrom(self):
+        global scene
+        name = QFileDialog.getOpenFileName(None, 'Choose file')[0]  
+        scene.addPixmap(QPixmap(name))
+
+    @classmethod
+    def saveto(self):
+        name = QFileDialog.getSaveFileName(None, 'Choose file')[0]
+        pixmap = QPixmap(viewport.size())
+        viewport.render(pixmap)
+        pixmap.save(name)
+
+    @classmethod
+    def save(self):
+        pixmap = QPixmap(viewport.size())
+        viewport.render(pixmap)
+        pixmap.save('image.jpg')
+
 
 class Window(QMainWindow):
     def __init__(self):
@@ -136,16 +156,16 @@ class Window(QMainWindow):
         self.initUI()
 
     def initUI(self):
-        impMenu1 = QMenu('size', self)
+        impMenu = QMenu('size', self)
         extractAction3 = QAction('Big', self)
         extractAction3.triggered.connect(Canvas.big_size)
-        extractAction8 = QAction('Medium', self)
-        extractAction8.triggered.connect(Canvas.medium_size)
-        extractAction9 = QAction('Small', self)
-        extractAction9.triggered.connect(Canvas.small_size)
-        impMenu1.addAction(extractAction3)
-        impMenu1.addAction(extractAction8)
-        impMenu1.addAction(extractAction9)
+        extractAction4 = QAction('Medium', self)
+        extractAction4.triggered.connect(Canvas.medium_size)
+        extractAction5 = QAction('Small', self)
+        extractAction5.triggered.connect(Canvas.small_size)
+        impMenu.addAction(extractAction3)
+        impMenu.addAction(extractAction4)
+        impMenu.addAction(extractAction5)
 
         extractAction1 = QAction('draw', self)
         extractAction1.triggered.connect(Canvas.draw)
@@ -153,29 +173,35 @@ class Window(QMainWindow):
         extractAction2 = QAction('colour', self)
         extractAction2.triggered.connect(Canvas.colour)
 
-        extractAction4 = QAction('erase', self)
-        extractAction4.triggered.connect(Canvas.erase)
+        extractAction6 = QAction('erase', self)
+        extractAction6.triggered.connect(Canvas.erase)
 
-        extractAction5 = QAction('save', self)
-        extractAction5.setShortcut('Ctrl+S')
-        extractAction5.triggered.connect(self.saveto)
+        extractAction7 = QAction('save as', self)
+        extractAction7.setShortcut('Ctrl+A')
+        extractAction7.triggered.connect(Canvas.saveto)
 
-        extractAction6 = QAction('load', self)
-        extractAction6.setShortcut('Ctrl+L')
-        extractAction6.triggered.connect(self.loadfrom)
+        extractAction8 = QAction('save', self)
+        extractAction8.setShortcut('Ctrl+S')
+        extractAction8.triggered.connect(Canvas.save)
+
+        extractAction9 = QAction('load', self)
+        extractAction9.setShortcut('Ctrl+L')
+        extractAction9.triggered.connect(Canvas.loadfrom)
+        
         mainMenu = self.menuBar()
 
         fileMenu1 = mainMenu.addMenu('&File')
-        fileMenu1.addAction(extractAction5)
-        fileMenu1.addAction(extractAction6)
+        fileMenu1.addAction(extractAction8)
+        fileMenu1.addAction(extractAction7)
+        fileMenu1.addAction(extractAction9)
         
         fileMenu2 = mainMenu.addMenu('&Pen')
         fileMenu2.addAction(extractAction1)
         fileMenu2.addAction(extractAction2)
-        fileMenu2.addMenu(impMenu1)
+        fileMenu2.addMenu(impMenu)
         
         fileMenu3 = mainMenu.addMenu('&Eraser')
-        fileMenu3.addAction(extractAction4)
+        fileMenu3.addAction(extractAction6)
         
         self.setGeometry(300, 300, 600, 600)
         self.center()
@@ -187,30 +213,16 @@ class Window(QMainWindow):
                                      QMessageBox.Yes | QMessageBox.No, \
                                      QMessageBox.Yes)
         if reply == QMessageBox.Yes:
-            self.saveto
+            Canvas.saveto
             event.accept()
         else:
             event.accept()
-
 
     def center(self):
         qr = self.frameGeometry()
         cp = QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
-
-    def saveto(self):
-        name = QFileDialog.getSaveFileName(self, 'Choose file')[0]
-
-    def loadfrom(self):
-        name = QFileDialog.getOpenFileName(self, 'Choose file')[0]
-        pixmap = QPixmap(name)
-        self.label = QLabel(self)
-        self.label.show()
-        self.label.setPixmap(pixmap)
-        self.label.resize(pixmap.width(), pixmap.height())
-        self.resize(pixmap.width(), pixmap.height())
-
 
 
 if __name__ == '__main__':
