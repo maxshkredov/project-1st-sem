@@ -1,23 +1,13 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDesktopWidget, \
-     QMessageBox, QAction, QFileDialog, QLabel, QMenu, \
+     QMessageBox, QAction, QFileDialog, QMenu, QColorDialog, \
      QGraphicsView, QVBoxLayout, QWidget, QGraphicsScene, QGraphicsPathItem, \
-     QColorDialog     
-from PyQt5.QtGui import QPixmap, QPen, QPainterPath, \
-     QMouseEvent, QIcon
+     QGraphicsPixmapItem
+from PyQt5.QtGui import QPixmap, QPen, QPainterPath, QIcon, QImage, \
+     QMouseEvent
 from PyQt5.QtCore import Qt
 
-        
-class Pathitem(QGraphicsPathItem):
-    def __init__(self):
-        super(Pathitem, self).__init__()
 
-
-class Path(QPainterPath):
-    def __init__(self):
-        super(Path, self).__init__()
-
-        
 class Canvas(QGraphicsView):
     def __init__(self):
         super(Canvas, self).__init__()
@@ -32,17 +22,17 @@ class Canvas(QGraphicsView):
         viewport = self.viewport()
 
         global new_path
-        new_path = Path()
+        new_path = QPainterPath()
 
-        global new_pathitem, pathitem1, pathitem2
+        global pathitem1, pathitem2, new_pathitem
         pathitem1 = QGraphicsPathItem()
         pathitem2 = QGraphicsPathItem()
-        new_pathitem = Pathitem()
-        
+        new_pathitem = QGraphicsPathItem()
+
         global pen
         pen = QPen(Qt.black, 10)
         pathitem1.setPen(pen)
-        
+
         eraser = QPen(Qt.white, 10)
         pathitem2.setPen(eraser)
 
@@ -71,25 +61,25 @@ class Canvas(QGraphicsView):
             self.path2.lineTo(self.end)
             pathitem2.setPath(self.path2)
 
-    @classmethod   
+    @classmethod
     def erase(self):
         global item
         item = pathitem2
         scene.addItem(item)
 
-    @classmethod  
+    @classmethod
     def draw(self):
         global item
         item = pathitem1
         scene.addItem(item)
-    
+
     @classmethod
     def big_size(self):
         global item, new_pathitem, new_path
         pen.setWidth(15)
-        new_pathitem = Pathitem()
+        new_pathitem = QGraphicsPathItem()
         new_pathitem.setPen(pen)
-        new_path = Path()
+        new_path = QPainterPath()
         item = new_pathitem
         scene.addItem(item)
 
@@ -97,9 +87,9 @@ class Canvas(QGraphicsView):
     def medium_size(self):
         global item, new_pathitem, new_path
         pen.setWidth(10)
-        new_pathitem = Pathitem()
+        new_pathitem = QGraphicsPathItem()
         new_pathitem.setPen(pen)
-        new_path = Path()
+        new_path = QPainterPath()
         item = new_pathitem
         scene.addItem(item)
 
@@ -107,9 +97,9 @@ class Canvas(QGraphicsView):
     def small_size(self):
         global item, new_pathitem, new_path
         pen.setWidth(5)
-        new_pathitem = Pathitem()
+        new_pathitem = QGraphicsPathItem()
         new_pathitem.setPen(pen)
-        new_path = Path()
+        new_path = QPainterPath()
         item = new_pathitem
         scene.addItem(item)
 
@@ -117,42 +107,52 @@ class Canvas(QGraphicsView):
     def colour(self):
         global item, new_pathitem, new_path
         pen.setColor(QColorDialog.getColor())
-        new_pathitem = Pathitem()
+        new_pathitem = QGraphicsPathItem()
         new_pathitem.setPen(pen)
-        new_path = Path()
+        new_path = QPainterPath()
         item = new_pathitem
         scene.addItem(item)
 
     @classmethod
     def loadfrom(self):
-        global scene
-        name = QFileDialog.getOpenFileName(None, 'Choose file')[0]  
-        scene.addPixmap(QPixmap(name))
+        global filename, item, new_path, new_pathitem
+        filename = QFileDialog.getOpenFileName(None, 'Choose file')[0]
+        pixmap = QPixmap(filename)
+        scene.addPixmap(pixmap)
+
+        new_pathitem = QGraphicsPathItem()
+        new_pathitem.setPen(pen)
+        new_path = QPainterPath()
+        item = new_pathitem
+        scene.addItem(item)
 
     @classmethod
     def saveto(self):
         name = QFileDialog.getSaveFileName(None, 'Choose file')[0]
-        pixmap = QPixmap(viewport.size())
-        viewport.render(pixmap)
-        pixmap.save(name)
+        image = QPixmap(viewport.size()).toImage()
+        viewport.render(image)
+        image.save(name)
 
     @classmethod
     def save(self):
-        pixmap = QPixmap(viewport.size())
-        viewport.render(pixmap)
-        pixmap.save('image.jpg')
+        image = QPixmap(viewport.size()).toImage()
+        viewport.render(image)
+        try:
+            image.save(filename)
+        except NameError:
+            image.save('image.jpg')
 
 
 class Window(QMainWindow):
     def __init__(self):
         super().__init__()
-        
+
         self.central_widget = QWidget()
         self.layout_container = QVBoxLayout()
         self.central_widget.setLayout(self.layout_container)
         self.setCentralWidget(self.central_widget)
         self.layout_container.addWidget(Canvas())
-        
+
         self.initUI()
 
     def initUI(self):
@@ -187,30 +187,30 @@ class Window(QMainWindow):
         extractAction9 = QAction('load', self)
         extractAction9.setShortcut('Ctrl+L')
         extractAction9.triggered.connect(Canvas.loadfrom)
-        
+
         mainMenu = self.menuBar()
 
         fileMenu1 = mainMenu.addMenu('&File')
         fileMenu1.addAction(extractAction8)
         fileMenu1.addAction(extractAction7)
         fileMenu1.addAction(extractAction9)
-        
+
         fileMenu2 = mainMenu.addMenu('&Pen')
         fileMenu2.addAction(extractAction1)
         fileMenu2.addAction(extractAction2)
         fileMenu2.addMenu(impMenu)
-        
+
         fileMenu3 = mainMenu.addMenu('&Eraser')
         fileMenu3.addAction(extractAction6)
-        
+
         self.setGeometry(300, 300, 600, 600)
         self.center()
         self.setWindowTitle('MyPaint')
         self.setWindowIcon(QIcon('Microsoft-Paint-icon.png'))
 
     def closeEvent(self, event):
-        reply = QMessageBox.question(self, 'Подтверждение', 'Сохранить файл?', \
-                                     QMessageBox.Yes | QMessageBox.No, \
+        reply = QMessageBox.question(self, 'Подтверждение', 'Сохранить файл?',
+                                     QMessageBox.Yes | QMessageBox.No,
                                      QMessageBox.Yes)
         if reply == QMessageBox.Yes:
             Canvas.saveto
