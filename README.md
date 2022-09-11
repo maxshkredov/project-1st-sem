@@ -1,3 +1,2 @@
-# project
-# MyPaint is considered to be a simple graphics editor with a pen, an eraser and the possibility to load and save images. That's the minimum I wanna provide.
-*I hate myself
+# project-1st-sem
+# MyPaint is considered to be a simple graphics editor with minimum functions.
